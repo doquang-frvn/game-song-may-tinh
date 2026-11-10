@@ -1,0 +1,780 @@
+<title>Sóng &amp; Máy Tính</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap">
+<style>
+/* Layout: one-screen kid app, bright committed single theme, big touch targets */
+:root{
+  --bg:#0e1b3a;          /* đêm xanh thẳm - nền vũ trụ */
+  --panel:#16264e;
+  --panel2:#1d3263;
+  --ink:#f3f7ff;
+  --ink-dim:#aebfe6;
+  --wave:#4dd6ff;        /* xanh sóng */
+  --spark:#ffd23f;       /* vàng tia điện / sao */
+  --bit0:#3a4f85;
+  --bit1:#ff7a59;        /* cam bit 1 */
+  --ok:#5ff2a0;
+  --font:"Baloo 2","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:8px;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+button{font-family:var(--font);cursor:pointer;border:none;border-radius:16px;color:var(--ink)}
+button:focus-visible{outline:3px solid var(--spark);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:.2em 0}
+.screen{display:none;max-width:860px;margin:0 auto}
+.screen.active{display:block}
+
+/* ---- Top bar ---- */
+#topbar{max-width:860px;margin:0 auto 10px;display:flex;align-items:center;gap:10px;min-height:48px}
+#btn-home{background:var(--panel2);padding:8px 14px;font-size:18px;font-weight:700;border-radius:14px}
+#topbar .title{font-weight:800;font-size:20px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#starbox{background:var(--panel2);border-radius:14px;padding:6px 14px;font-size:20px;font-weight:800;color:var(--spark);font-variant-numeric:tabular-nums}
+
+/* ---- Home ---- */
+#home h1{font-size:clamp(28px,6vw,44px);text-align:center;font-weight:800}
+#home .sub{text-align:center;color:var(--ink-dim);font-size:18px;margin-bottom:18px}
+.doors{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.door{flex:1 1 260px;max-width:380px;background:var(--panel);border-radius:24px;padding:22px 18px;text-align:center;font-size:20px;font-weight:700;border:3px solid transparent}
+.door:active{transform:scale(.97)}
+.door .big{font-size:56px;display:block;margin-bottom:8px}
+.door small{display:block;color:var(--ink-dim);font-weight:500;font-size:15px;margin-top:6px}
+.door.wave-door{border-color:var(--wave)}
+.door.key-door{border-color:var(--bit1)}
+.bridge{margin:20px auto 0;max-width:560px;text-align:center;color:var(--ink-dim);font-size:16px;background:var(--panel);border-radius:16px;padding:12px 16px}
+.bridge b{color:var(--spark)}
+
+/* ---- Common card / controls ---- */
+.card{background:var(--panel);border-radius:20px;padding:14px 16px;margin:10px 0}
+.lead{font-size:19px;line-height:1.45;margin:6px 0}
+.lead b{color:var(--wave)}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.btn{background:var(--panel2);padding:12px 20px;font-size:19px;font-weight:700}
+.btn.primary{background:var(--wave);color:#06243a}
+.btn.warm{background:var(--bit1);color:#3a1105}
+.btn:disabled{opacity:.4;cursor:default}
+.reward{display:none;background:var(--panel2);border:2px solid var(--spark);border-radius:16px;padding:10px 14px;margin-top:10px;font-size:19px;font-weight:700;color:var(--spark)}
+.reward.show{display:block}
+canvas{display:block;width:100%;border-radius:16px;background:#0a142c;touch-action:none;max-width:100%}
+input[type=range]{width:100%;accent-color:var(--wave);height:36px}
+.slider-label{display:flex;justify-content:space-between;font-size:16px;color:var(--ink-dim);font-weight:700}
+.quiz{display:flex;gap:10px;flex-wrap:wrap}
+.quiz .btn{flex:1 1 150px}
+.quiz .btn.correct{background:var(--ok);color:#043019}
+.quiz .btn.wrong{background:#5c2a3a}
+
+/* ---- Zoom world ---- */
+#zoomwrap{position:relative}
+#zoombar{display:flex;align-items:center;gap:12px;margin-top:10px}
+#zoombar .zbtn{width:56px;height:56px;font-size:30px;font-weight:800;background:var(--panel2);border-radius:18px;flex:none}
+#zoomlevelname{text-align:center;font-size:18px;font-weight:800;color:var(--wave);margin-top:8px;min-height:26px}
+#wave-apps{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.appchip{background:var(--panel2);border-radius:14px;padding:10px 14px;font-size:17px;font-weight:700;border:2px solid transparent}
+.appchip.active{border-color:var(--spark);color:var(--spark)}
+#appinfo{min-height:52px;font-size:17px;line-height:1.4;color:var(--ink-dim);margin-top:8px}
+
+/* ---- Journey ---- */
+#stations{display:flex;gap:6px;margin:8px 0 4px;align-items:center}
+.stop{flex:1;height:12px;border-radius:8px;background:var(--bit0)}
+.stop.done{background:var(--spark)}
+.stop.now{background:var(--wave)}
+#station-title{font-size:22px;font-weight:800}
+.hint{color:var(--ink-dim);font-size:16px;line-height:1.4}
+
+/* Station 1: key */
+#bigkey{width:150px;height:150px;border-radius:28px;background:linear-gradient(#e8edf7,#b9c4dd);color:#1b2a52;font-size:64px;font-weight:800;box-shadow:0 10px 0 #5a688c;margin:6px auto;display:block}
+#bigkey.down{transform:translateY(8px);box-shadow:0 2px 0 #5a688c}
+.lampline{display:flex;align-items:center;justify-content:center;gap:14px;font-size:20px;font-weight:800;margin-top:10px}
+#lamp{width:44px;height:44px;border-radius:50%;background:#3a4663;border:3px solid #5a688c;transition:background .1s}
+#lamp.on{background:var(--spark);box-shadow:0 0 24px var(--spark)}
+#bitreadout{font-size:30px;letter-spacing:4px;font-variant-numeric:tabular-nums;color:var(--wave);min-height:40px;text-align:center;font-weight:800}
+
+/* Station 2: bits */
+#charpick{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+#charpick .btn{padding:10px 16px;font-size:22px}
+.bitrow{display:flex;gap:6px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.bit{width:60px;height:72px;border-radius:14px;font-size:30px;font-weight:800;background:var(--bit0);color:var(--ink-dim);flex:none}
+.bit.on{background:var(--bit1);color:#fff}
+#bits-letter{text-align:center;font-size:46px;font-weight:800;color:var(--spark);min-height:60px}
+#bits-target{text-align:center;font-size:18px;color:var(--ink-dim);min-height:26px}
+
+/* Station 4: gates */
+.gatebox{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:10px 0}
+.switch{width:76px;height:76px;border-radius:18px;font-size:34px;font-weight:800;background:var(--bit0);flex:none}
+.switch.on{background:var(--bit1)}
+#gate-q{text-align:center;font-size:20px;font-weight:800;min-height:30px}
+#gate-score{text-align:center;color:var(--ink-dim)}
+
+/* Station 5 screen */
+#pixgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-width:340px;margin:10px auto;background:#0a142c;padding:10px;border-radius:16px}
+#pixgrid div{aspect-ratio:1;border-radius:4px;background:#1b2a52;transition:background .15s}
+#pixgrid div.lit{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+#swatchrow{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;margin:10px 0}
+#swatch{width:110px;height:110px;border-radius:18px;border:3px solid #5a688c}
+#subpix{width:110px;height:110px;border-radius:18px;background:#05070f;display:flex;gap:6px;padding:10px;border:3px solid #5a688c}
+#subpix div{flex:1;border-radius:6px}
+.crow{display:flex;align-items:center;gap:10px;margin:6px 0}
+.crow span{width:96px;font-weight:800;flex:none}
+.crow input{flex:1;min-width:0}
+.min0{min-width:0}
+@media (max-width:480px){ .bit{width:40px;height:56px;font-size:22px} }
+</style>
+
+<div id="topbar">
+  <button id="btn-home" hidden>⬅ Về nhà</button>
+  <div class="title" id="bar-title">Sóng &amp; Máy Tính</div>
+  <div id="starbox">⭐ <span id="starcount">0</span></div>
+</div>
+
+<!-- ================= HOME ================= -->
+<div class="screen active" id="home">
+  <h1>🌊 Sóng &amp; Máy Tính 💻</h1>
+  <p class="sub">Chọn một cánh cửa để khám phá nhé!</p>
+  <div class="doors">
+    <button class="door wave-door" data-go="wave"><span class="big">🌊</span>Thế Giới Sóng<small>Phóng to – thu nhỏ để xem sóng chạy đi đâu</small></button>
+    <button class="door key-door" data-go="journey"><span class="big">⌨️</span>Hành Trình Phím Bấm<small>Một chữ cái đi từ bàn phím ra màn hình như thế nào?</small></button>
+  </div>
+  <div class="bridge">💡 Bí mật: hai thế giới này nối với nhau! Khi con gõ phím, chữ biến thành <b>tín hiệu điện</b> — và tín hiệu điện chạy đi… chính là <b>sóng</b> đấy!</div>
+</div>
+
+<!-- ================= WAVE WORLD ================= -->
+<div class="screen" id="wave">
+  <div class="card">
+    <canvas id="wavecanvas" height="300"></canvas>
+    <div id="zoombar">
+      <button class="zbtn" id="zoom-out">➖</button>
+      <input type="range" id="zoomslider" min="0" max="5" step="1" value="4">
+      <button class="zbtn" id="zoom-in">➕</button>
+    </div>
+    <div id="zoomlevelname"></div>
+  </div>
+  <div class="card" id="wave-controls">
+    <div class="slider-label"><span>🎵 Tần số (sóng nhanh/chậm)</span><span id="freq-val"></span></div>
+    <input type="range" id="freq" min="1" max="8" step="1" value="3">
+    <div class="slider-label"><span>📏 Biên độ (sóng cao/thấp)</span><span id="amp-val"></span></div>
+    <input type="range" id="amp" min="10" max="60" step="5" value="40">
+    <p class="hint">Bước sóng (λ) là quãng đường từ đỉnh sóng này sang đỉnh sóng kế bên. Kéo tần số lên — bước sóng sẽ <b>ngắn lại</b>!</p>
+  </div>
+  <div class="card" id="fogcard" hidden>
+    <p class="lead">Trong không khí có hàng tỉ <b>hạt sương nhỏ xíu</b> lơ lửng. Ánh sáng <b>đỏ</b> có bước sóng DÀI — như sợi dây dài lượn êm qua các hạt. Ánh sáng <b>tím</b> có bước sóng NGẮN — đập vào hạt và bị <b>văng tứ tung</b> (gọi là tán xạ)!</p>
+    <div class="slider-label"><span>🔴 Đỏ (sóng dài)</span><span>🟣 Tím (sóng ngắn)</span></div>
+    <input type="range" id="lightcolor" min="0" max="100" value="0" style="accent-color:#ff5c5c">
+    <div class="btnrow">
+      <button class="btn primary" id="firelight">🔦 Bắn 12 tia sáng!</button>
+      <span class="btn" id="fog-count" style="cursor:default">Đến nơi: 0 / 0 tia</span>
+    </div>
+    <p class="hint">Bắn màu đỏ trước, rồi kéo sang tím bắn lại — đếm xem màu nào đến được chiếc xe 🚗 nhiều hơn!</p>
+    <p class="lead">🧠 Vì thế đèn sương mù và đèn hậu ô tô màu <b>đỏ/vàng</b>. Còn bầu trời màu <b>xanh</b> là vì ánh sáng xanh bị không khí làm văng khắp nơi, rơi vào mắt mình từ mọi phía!</p>
+    <p class="lead" id="fog-q">🎯 Đố con: đi xe trong sương mù, nên bật đèn màu gì để người khác thấy mình từ xa?</p>
+    <div class="quiz" id="fog-quiz">
+      <button class="btn" data-ok="1">Đèn ĐỎ / VÀNG 🔴</button>
+      <button class="btn" data-ok="0">Đèn TÍM 🟣</button>
+    </div>
+  </div>
+  <div class="card" id="wave-appcard" hidden>
+    <div id="wave-apps"></div>
+    <p id="appinfo">Bấm vào một thứ ở trên để xem nó dùng sóng như thế nào nhé!</p>
+  </div>
+  <div class="card" id="wave-quizcard">
+    <p class="lead" id="wq-question"></p>
+    <div class="quiz" id="wq-answers"></div>
+    <div class="reward" id="wq-reward">🎉 Đúng rồi! +1 ⭐</div>
+  </div>
+</div>
+
+<!-- ================= JOURNEY ================= -->
+<div class="screen" id="journey">
+  <div id="stations"></div>
+  <div class="card">
+    <div id="station-title"></div>
+    <div id="station-body"></div>
+    <div class="btnrow">
+      <button class="btn" id="st-prev">⬅ Lùi</button>
+      <button class="btn primary" id="st-next" disabled>Đi tiếp ➡</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= stars (session only — nhiều bé chơi chung 1 máy) ================= */
+let stars = 0;
+const earned = new Set();
+function addStar(key){
+  if(earned.has(key)) return false;
+  earned.add(key); stars++;
+  document.getElementById('starcount').textContent = stars;
+  return true;
+}
+
+/* ================= navigation ================= */
+const screens = ['home','wave','journey'];
+function show(id){
+  screens.forEach(s=>document.getElementById(s).classList.toggle('active', s===id));
+  document.getElementById('btn-home').hidden = (id==='home');
+  document.getElementById('bar-title').textContent =
+    id==='wave' ? '🌊 Thế Giới Sóng' : id==='journey' ? '⌨️ Hành Trình Phím Bấm' : 'Sóng & Máy Tính';
+  if(id==='wave') startWave(); else stopWave();
+  if(id==='journey') renderStation();
+}
+document.querySelectorAll('.door').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)));
+document.getElementById('btn-home').addEventListener('click',()=>show('home'));
+
+/* ================= WAVE WORLD ================= */
+const ZOOMS = [
+  {name:'🌍 Cả Trái Đất — sóng bay vòng quanh thế giới!',
+   apps:[['📡 Vệ tinh','Vệ tinh bay trên trời, gửi sóng xuống cho điện thoại, tivi và bản đồ chỉ đường.'],
+         ['☀️ Ánh sáng Mặt Trời','Ánh sáng cũng là sóng! Nó bay từ Mặt Trời đến Trái Đất chỉ mất 8 phút.'],
+         ['🌊 Sóng biển','Sóng nước ngoài biển cũng nhấp nhô y như sóng con vừa xem — chỉ là to hơn nhiều!']]},
+  {name:'🏙️ Thành phố — sóng vô hình bay khắp nơi',
+   apps:[['📻 Đài radio','Cột phát thanh gửi nhạc đi xa hàng chục cây số bằng sóng radio.'],
+         ['📱 Điện thoại','Khi gọi điện, giọng nói biến thành sóng, bay đến cột sóng rồi đến tai người kia.'],
+         ['🗼 Cột phát sóng','Những cột cao cao con hay thấy chính là nơi "ném" sóng đi khắp thành phố.']]},
+  {name:'🏠 Trong nhà mình — đầy sóng luôn!',
+   apps:[['📶 Wifi','Cục wifi phát sóng vô hình để máy tính bảng xem video không cần dây.'],
+         ['🎛️ Điều khiển TV','Bấm điều khiển là bắn một tia sóng ánh sáng vô hình sang TV. "Tách" — đổi kênh!'],
+         ['🔊 Loa nhạc','Loa rung thật nhanh, đẩy không khí thành sóng âm, bay đến tai con thành tiếng nhạc.']]},
+  {name:'🔍 Nhìn gần — sóng đang chạy về phía trước',
+   apps:[]},
+  {name:'🔬 Phóng to hết cỡ — một con sóng!',
+   apps:[]},
+  {name:'🌫️ Siêu phóng to — ánh sáng chui qua sương mù!',
+   apps:[]},
+];
+let zoom = 4, waveT = 0, waveRAF = null;
+const canvas = document.getElementById('wavecanvas');
+const ctx = canvas.getContext('2d');
+const freqEl = document.getElementById('freq'), ampEl = document.getElementById('amp');
+
+function fitCanvas(){
+  const w = canvas.clientWidth || 600;
+  const dpr = window.devicePixelRatio||1;
+  canvas.width = w*dpr; canvas.height = 300*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function drawWave(){
+  const w = canvas.clientWidth||600, h = 300;
+  ctx.clearRect(0,0,w,h);
+  if(zoom===5){ drawFog(w,h); return; }
+  const f = +freqEl.value, a = +ampEl.value;
+  document.getElementById('freq-val').textContent = f;
+  document.getElementById('amp-val').textContent = a;
+  ctx.lineWidth = 5; ctx.strokeStyle = '#4dd6ff'; ctx.lineCap='round';
+
+  if(zoom>=3){
+    // close-up sine wave
+    const mid = h/2, k = f*2*Math.PI/w * (zoom===4?1:2.2);
+    ctx.beginPath();
+    for(let x=0;x<=w;x+=3){
+      const y = mid - a*Math.sin(k*x*(zoom===4?1:1)*1.0 - waveT*f*0.9)* (zoom===4?1.4:1);
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    if(zoom===4){
+      // particles bobbing: wave moves forward, particles only bob
+      ctx.fillStyle = '#ffd23f';
+      for(let i=1;i<=9;i++){
+        const x = w*i/10;
+        const y = mid - a*1.4*Math.sin(k*x - waveT*f*0.9);
+        ctx.beginPath(); ctx.arc(x,y,7,0,7); ctx.fill();
+      }
+      // wavelength bracket between two crests
+      const lambda = 2*Math.PI/k;
+      const x0 = ((Math.PI/2 + waveT*f*0.9)/k) % lambda;
+      if(x0+lambda < w-10){
+        const yB = mid - a*1.4 - 22;
+        ctx.strokeStyle='#5ff2a0'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(x0,yB); ctx.lineTo(x0+lambda,yB);
+        ctx.moveTo(x0,yB-8); ctx.lineTo(x0,yB+8);
+        ctx.moveTo(x0+lambda,yB-8); ctx.lineTo(x0+lambda,yB+8); ctx.stroke();
+        ctx.fillStyle='#5ff2a0'; ctx.font='700 18px "Baloo 2"'; ctx.textAlign='center';
+        ctx.fillText('bước sóng λ', x0+lambda/2, yB-14);
+      }
+      ctx.fillStyle='#aebfe6'; ctx.font='500 15px "Baloo 2"'; ctx.textAlign='left';
+      ctx.fillText('Chấm vàng chỉ nhún lên xuống — còn hình sóng thì chạy tới!', 12, h-14);
+    }else{
+      ctx.fillStyle='#aebfe6'; ctx.font='500 15px "Baloo 2"'; ctx.textAlign='left';
+      ctx.fillText('Nhiều con sóng nối đuôi nhau chạy về phía trước →', 12, h-14);
+    }
+  }else{
+    // zoomed-out scenes: emitter + expanding rings + emojis
+    const scenes = [
+      {e:'🌍', rings:7, label:'Sóng bay quanh Trái Đất'},
+      {e:'🗼', rings:6, label:'Cột sóng phát đi khắp thành phố'},
+      {e:'📶', rings:5, label:'Wifi, loa, điều khiển TV trong nhà'},
+    ];
+    const s = scenes[zoom];
+    ctx.font='64px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(s.e, 80, h/2);
+    ctx.lineWidth=3;
+    for(let i=0;i<s.rings;i++){
+      const r = ((waveT*40 + i*(w/s.rings)) % (w)) ;
+      ctx.strokeStyle = 'rgba(77,214,255,'+Math.max(0,1-r/w)+')';
+      ctx.beginPath(); ctx.arc(80, h/2, 40+r, -1.1, 1.1); ctx.stroke();
+    }
+    ctx.fillStyle='#aebfe6'; ctx.font='500 16px "Baloo 2"'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillText(s.label, 12, h-14);
+  }
+}
+function loop(){ waveT += 0.03; drawWave(); waveRAF = requestAnimationFrame(loop); }
+function startWave(){ fitCanvas(); if(!waveRAF) loop(); applyZoom(); }
+function stopWave(){ if(waveRAF){cancelAnimationFrame(waveRAF); waveRAF=null;} }
+window.addEventListener('resize',()=>{ if(waveRAF) fitCanvas(); });
+
+/* ---- fog scattering scene (zoom level 5) ---- */
+const fog={drops:[],ph:[],arrived:0,fired:0,w:0};
+function fogInit(w,h){
+  fog.w=w; fog.drops=[];
+  for(let i=0;i<34;i++) fog.drops.push({x:70+Math.random()*(w-160),y:24+Math.random()*(h-70),r:7+Math.random()*9,p:Math.random()*6.28,hit:0});
+}
+function fireLight(){
+  const t=+document.getElementById('lightcolor').value;
+  fog.ph=[]; fog.arrived=0; fog.fired=12;
+  for(let i=0;i<12;i++) fog.ph.push({x:-Math.random()*90,y:36+i*19,a:0,sc:0,done:false,t});
+  updateFogCount();
+}
+function updateFogCount(){
+  document.getElementById('fog-count').textContent='Đến nơi: '+fog.arrived+' / '+fog.fired+' tia';
+}
+function drawFog(w,h){
+  if(fog.w!==w||!fog.drops.length) fogInit(w,h);
+  const t=+document.getElementById('lightcolor').value;
+  const lam=46-0.36*t, hue=t*2.75, col='hsl('+hue+',95%,62%)';
+  /* màn sương mờ ảo */
+  const grad=ctx.createLinearGradient(0,0,w,0);
+  grad.addColorStop(0,'rgba(170,190,230,.04)');grad.addColorStop(.5,'rgba(170,190,230,.13)');grad.addColorStop(1,'rgba(170,190,230,.04)');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
+  ctx.font='40px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🔦', 24, h/2); ctx.fillText('🚗', w-30, h/2);
+  /* hạt sương rung lắc bồng bềnh, lóe sáng khi bị tia đập vào */
+  fog.drops.forEach(d=>{
+    const wx=d.x+Math.sin(waveT*2.2+d.p)*4, wy=d.y+Math.cos(waveT*1.7+d.p*1.3)*3;
+    d.cx=wx; d.cy=wy;
+    const hit=(waveT-d.hit)<0.25;
+    const g=ctx.createRadialGradient(wx-2,wy-3,1,wx,wy,d.r+(hit?5:0));
+    g.addColorStop(0,hit?'rgba(255,255,255,.95)':'rgba(230,240,255,.6)');
+    g.addColorStop(1,'rgba(180,200,240,.05)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(wx,wy,d.r+(hit?5:0),0,7); ctx.fill();
+  });
+  /* luồng sáng xem trước từ đèn pin: màu, bước sóng và tần số đổi theo thanh kéo */
+  const fscale=46/lam;                       // sóng ngắn → rung nhanh hơn
+  ctx.save(); ctx.shadowColor=col; ctx.shadowBlur=14;
+  ctx.strokeStyle=col; ctx.lineWidth=4; ctx.lineCap='round'; ctx.beginPath();
+  for(let s=0;s<=150;s+=3){
+    const y=h/2 + 9*Math.sin(s*2*Math.PI/lam - waveT*5*fscale);
+    s===0?ctx.moveTo(44+s,y):ctx.lineTo(44+s,y);
+  }
+  ctx.stroke(); ctx.restore();
+  /* các tia đã bắn */
+  fog.ph.forEach(p=>{
+    if(p.done) return;
+    const plam=46-0.36*p.t, phue=p.t*2.75, spd=3.4;
+    p.x+=Math.cos(p.a)*spd; p.y+=Math.sin(p.a)*spd;
+    if(p.x>w-54){ p.done=true; fog.arrived++; updateFogCount(); return; }
+    if(p.x<-140||p.y<-50||p.y>h+50){ p.done=true; return; }
+    if(p.x>4) for(const d of fog.drops){
+      const dx=p.x-(d.cx??d.x), dy=p.y-(d.cy??d.y);
+      if(dx*dx+dy*dy<(d.r+3)*(d.r+3)){
+        const prob=0.02+0.55*Math.pow(p.t/100,2);   // sóng càng ngắn càng dễ bị văng
+        if(Math.random()<prob){ p.a+=(Math.random()<.5?1:-1)*(1+Math.random()*1.6); p.sc++; d.hit=waveT; }
+        break;
+      }
+    }
+    const pcol='hsl('+phue+',95%,'+(p.sc?48:66)+'%)', pfs=46/plam;
+    ctx.save(); ctx.shadowColor=pcol; ctx.shadowBlur=9;
+    ctx.strokeStyle=pcol; ctx.lineWidth=3; ctx.lineCap='round'; ctx.beginPath();
+    const ca=Math.cos(p.a), sa=Math.sin(p.a);
+    for(let s=0;s<=38;s+=3){
+      const off=6*Math.sin(s*2*Math.PI/plam + waveT*5*pfs);
+      const x=p.x-ca*s-sa*off, y=p.y-sa*s+ca*off;
+      s===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke(); ctx.restore();
+  });
+  ctx.fillStyle='#aebfe6'; ctx.font='500 15px "Baloo 2"'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.fillText('Kéo thanh màu: sóng đổi màu, ngắn lại và rung nhanh hơn. Sóng ngắn đập hạt sương là văng!', 12, h-12);
+}
+document.getElementById('firelight').addEventListener('click',fireLight);
+const lcEl=document.getElementById('lightcolor');
+lcEl.addEventListener('input',()=>{ lcEl.style.accentColor='hsl('+(+lcEl.value*2.75)+',95%,60%)'; });
+document.querySelectorAll('#fog-quiz .btn').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.ok==='1'){
+    b.classList.add('correct');
+    document.getElementById('fog-q').textContent='🎉 Đúng rồi! Sóng dài xuyên sương giỏi hơn. +1 ⭐';
+    if(addStar('fog')) flashStar();
+  }else{ b.classList.add('wrong'); b.disabled=true; }
+}));
+
+const zslider = document.getElementById('zoomslider');
+function applyZoom(){
+  zoom = +zslider.value;
+  document.getElementById('zoomlevelname').textContent = ZOOMS[zoom].name;
+  document.getElementById('wave-controls').hidden = (zoom < 3 || zoom === 5);
+  document.getElementById('fogcard').hidden = zoom !== 5;
+  const appcard = document.getElementById('wave-appcard');
+  const apps = ZOOMS[zoom].apps;
+  appcard.hidden = apps.length===0;
+  const box = document.getElementById('wave-apps');
+  box.innerHTML='';
+  document.getElementById('appinfo').textContent = 'Bấm vào một thứ ở trên để xem nó dùng sóng như thế nào nhé!';
+  apps.forEach(([label,info])=>{
+    const b=document.createElement('button'); b.className='appchip'; b.textContent=label;
+    b.addEventListener('click',()=>{
+      box.querySelectorAll('.appchip').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      document.getElementById('appinfo').textContent = info;
+      addStar('app:'+label) && flashStar();
+    });
+    box.appendChild(b);
+  });
+}
+zslider.addEventListener('input',applyZoom);
+document.getElementById('zoom-in').addEventListener('click',()=>{zslider.value=Math.min(5,+zslider.value+1);applyZoom();});
+document.getElementById('zoom-out').addEventListener('click',()=>{zslider.value=Math.max(0,+zslider.value-1);applyZoom();});
+function flashStar(){
+  const sb=document.getElementById('starbox');
+  sb.animate([{transform:'scale(1)'},{transform:'scale(1.4)'},{transform:'scale(1)'}],{duration:400});
+}
+
+/* wave quiz */
+const WQ = [
+  {q:'Kéo tần số LÊN CAO thì bước sóng sẽ…', a:['Ngắn lại ✂️','Dài ra 📏','Không đổi'], c:0},
+  {q:'Chấm vàng trên sóng nước làm gì khi sóng chạy qua?', a:['Nhún lên xuống tại chỗ','Trôi theo sóng đi xa','Đứng yên hoàn toàn'], c:0},
+  {q:'Cái nào KHÔNG dùng sóng?', a:['Cục wifi','Điều khiển TV','Cái thìa ăn cơm 🥄'], c:2},
+];
+let wqi = 0;
+function renderWQ(){
+  const q = WQ[wqi % WQ.length];
+  document.getElementById('wq-question').textContent = '🧠 Đố con: ' + q.q;
+  const box = document.getElementById('wq-answers'); box.innerHTML='';
+  q.a.forEach((t,i)=>{
+    const b=document.createElement('button'); b.className='btn'; b.textContent=t;
+    b.addEventListener('click',()=>{
+      if(i===q.c){
+        b.classList.add('correct');
+        const r=document.getElementById('wq-reward');
+        r.classList.add('show');
+        if(addStar('wq'+wqi)) flashStar();
+        setTimeout(()=>{r.classList.remove('show'); wqi++; renderWQ();},1400);
+      }else{ b.classList.add('wrong'); b.disabled=true; }
+    });
+    box.appendChild(b);
+  });
+}
+renderWQ();
+
+/* ================= JOURNEY ================= */
+let st = 0;                 // current station
+const stDone = [false,false,false,false,false];
+let chosenChar = 'A';
+const NEXT = document.getElementById('st-next');
+
+const STATIONS = [
+ {title:'🚉 Trạm 1 — Phím bấm là một công tắc điện',
+  build(body){
+    body.innerHTML = `
+      <p class="lead">Dưới mỗi phím là một <b>công tắc</b>. Bấm xuống → mạch điện <b>đóng</b> → dòng điện chạy = số <b>1</b>. Nhả ra = số <b>0</b>.</p>
+      <button id="bigkey">${chosenChar}</button>
+      <div class="lampline"><div id="lamp"></div><span id="lamptext">0 — mạch hở</span></div>
+      <p class="hint" style="text-align:center">Bấm phím <b>5 lần</b> để nhận ⭐! Dãy số của con:</p>
+      <div id="bitreadout"></div>`;
+    const key=document.getElementById('bigkey'), lamp=document.getElementById('lamp'),
+          txt=document.getElementById('lamptext'), out=document.getElementById('bitreadout');
+    let presses=0;
+    const down=e=>{e.preventDefault(); key.classList.add('down'); lamp.classList.add('on'); txt.textContent='1 — điện chạy!';};
+    const up=e=>{e.preventDefault();
+      if(!key.classList.contains('down'))return;
+      key.classList.remove('down'); lamp.classList.remove('on'); txt.textContent='0 — mạch hở';
+      out.textContent += (out.textContent?' ':'')+'1 0';
+      if(++presses>=5 && !stDone[0]){ stDone[0]=true; if(addStar('st1'))flashStar(); NEXT.disabled=false; renderStops(); }
+    };
+    key.addEventListener('pointerdown',down); key.addEventListener('pointerup',up); key.addEventListener('pointerleave',up);
+  }},
+ {title:'🚉 Trạm 2 — Chữ cái biến thành 8 con số',
+  build(body){
+    body.innerHTML = `
+      <p class="lead">Máy tính chỉ biết <b>0 và 1</b>. Mỗi chữ cái có một "mật mã" gồm 8 số, gọi là <b>nhị phân</b>. Chọn một chữ, rồi <b>bật/tắt các ô</b> cho đúng mật mã nhé!</p>
+      <div id="charpick"></div>
+      <div id="bits-target"></div>
+      <div class="bitrow" id="bitrow"></div>
+      <div id="bits-letter"></div>`;
+    const letters=['A','B','C','E','H','K','M','N'];
+    const pick=document.getElementById('charpick');
+    letters.forEach(L=>{
+      const b=document.createElement('button'); b.className='btn'; b.textContent=L;
+      b.addEventListener('click',()=>setTarget(L)); pick.appendChild(b);
+    });
+    const row=document.getElementById('bitrow');
+    let bits=[0,0,0,0,0,0,0,0], target=null;
+    for(let i=0;i<8;i++){
+      const b=document.createElement('button'); b.className='bit'; b.textContent='0';
+      b.addEventListener('click',()=>{
+        bits[i]^=1; b.textContent=bits[i]; b.classList.toggle('on',!!bits[i]); check();
+      });
+      row.appendChild(b);
+    }
+    function code(L){ return L.charCodeAt(0).toString(2).padStart(8,'0'); }
+    function setTarget(L){
+      target=L; chosenChar=L;
+      document.getElementById('bits-target').textContent = 'Mật mã của chữ '+L+' là:  '+code(L).split('').join(' ');
+      check();
+    }
+    function check(){
+      const cur=bits.join('');
+      const n=parseInt(cur,2);
+      const show=document.getElementById('bits-letter');
+      show.textContent = (n>=65&&n<=90) ? '→ chữ '+String.fromCharCode(n)+'!' : '→ … chưa ra chữ nào';
+      if(target && cur===code(target)){
+        show.textContent='🎉 Đúng mật mã của chữ '+target+'!';
+        if(!stDone[1]){ stDone[1]=true; if(addStar('st2'))flashStar(); NEXT.disabled=false; renderStops(); }
+      }
+    }
+    setTarget('A');
+  }},
+ {title:'🚉 Trạm 3 — 8 con số chạy trên dây điện (lại là sóng!)',
+  build(body){
+    body.innerHTML = `
+      <p class="lead">Chữ <b>${chosenChar}</b> của con giờ là dãy số <b>${chosenChar.charCodeAt(0).toString(2).padStart(8,'0').split('').join(' ')}</b>. Nó chạy trên dây bằng các <b>xung điện</b>: điện cao = 1, điện thấp = 0. Nhìn giống hệt một con sóng vuông phải không? 🌊</p>
+      <canvas id="wirecanvas" height="180"></canvas>
+      <div class="btnrow"><button class="btn primary" id="sendbits">📨 Gửi đi!</button></div>
+      <p class="hint">Trong dây mạng, wifi hay cáp quang — chữ của con cũng đi y như thế này, chỉ là nhanh gấp tỉ lần!</p>`;
+    const c=document.getElementById('wirecanvas'), g=c.getContext('2d');
+    const bits = chosenChar.charCodeAt(0).toString(2).padStart(8,'0').split('').map(Number);
+    function fit(){ const dpr=devicePixelRatio||1, w=c.clientWidth||600; c.width=w*dpr; c.height=180*dpr; g.setTransform(dpr,0,0,dpr,0,0); }
+    fit();
+    let off=-9999, raf=null;
+    function draw(){
+      const w=c.clientWidth||600, h=180, seg=60, hi=45, lo=135;
+      g.clearRect(0,0,w,h);
+      g.strokeStyle='#3a4f85'; g.lineWidth=3; g.beginPath(); g.moveTo(0,lo); g.lineTo(w,lo); g.stroke();
+      g.strokeStyle='#ffd23f'; g.lineWidth=5; g.lineCap='round'; g.lineJoin='round'; g.beginPath();
+      let x=off, y=lo; g.moveTo(x,y);
+      bits.forEach(b=>{ const ny=b?hi:lo; if(ny!==y){g.lineTo(x,ny); y=ny;} x+=seg; g.lineTo(x,y); });
+      if(y!==lo) g.lineTo(x,lo);
+      g.stroke();
+      g.fillStyle='#aebfe6'; g.font='700 16px "Baloo 2"';
+      bits.forEach((b,i)=>{ const bx=off+i*seg+seg/2; if(bx>0&&bx<w) g.fillText(b, bx-5, b?hi-12:lo+24); });
+      off+=4;
+      if(off < w+seg) raf=requestAnimationFrame(draw);
+      else{ raf=null;
+        if(!stDone[2]){ stDone[2]=true; if(addStar('st3'))flashStar(); NEXT.disabled=false; renderStops(); }
+        g.fillStyle='#5ff2a0'; g.font='800 22px "Baloo 2"'; g.textAlign='center';
+        g.fillText('✅ Đã đến chip! Đi tiếp nào →', w/2, 90); g.textAlign='left';
+      }
+    }
+    document.getElementById('sendbits').addEventListener('click',()=>{ if(raf)cancelAnimationFrame(raf); off=-8*60; draw(); });
+  }},
+ {title:'🚉 Trạm 4 — Con chip suy nghĩ bằng cổng điện',
+  build(body){
+    body.innerHTML = `
+      <p class="lead">Chip (CPU) là "bộ não" tí hon với <b>hàng tỉ công tắc</b>. Nó làm việc theo 3 bước, lặp đi lặp lại cả tỉ lần mỗi giây: <b>① Lấy lệnh → ② Hiểu lệnh → ③ Làm lệnh</b>.</p>
+      <p class="lead">Chip suy nghĩ bằng <b>cổng VÀ</b>: đèn chỉ sáng khi <b>CẢ HAI</b> công tắc cùng bật. Thử đoán xem!</p>
+      <div class="gatebox">
+        <button class="switch" id="sw1">0</button><span style="font-size:26px;font-weight:800">VÀ</span>
+        <button class="switch" id="sw2">0</button><span style="font-size:26px">→</span>
+        <div id="lamp2" style="width:64px;height:64px;border-radius:50%;background:#3a4663;border:3px solid #5a688c;flex:none"></div>
+      </div>
+      <div id="gate-q"></div>
+      <div class="quiz" style="margin-top:10px">
+        <button class="btn" id="g-on">Đèn SÁNG 💡</button>
+        <button class="btn" id="g-off">Đèn TẮT ⚫</button>
+      </div>
+      <div id="gate-score"></div>`;
+    let s1=0,s2=0,score=0,round=0;
+    const sw1=document.getElementById('sw1'),sw2=document.getElementById('sw2'),lamp=document.getElementById('lamp2');
+    function newRound(){
+      s1=Math.random()<.5?0:1; s2=Math.random()<.5?0:1;
+      sw1.textContent=s1; sw1.classList.toggle('on',!!s1);
+      sw2.textContent=s2; sw2.classList.toggle('on',!!s2);
+      lamp.style.background='#3a4663'; lamp.style.boxShadow='none';
+      document.getElementById('gate-q').textContent='Công tắc là '+s1+' VÀ '+s2+'. Đèn sẽ thế nào?';
+    }
+    function answer(guessOn){
+      const on = (s1&&s2);
+      lamp.style.background = on?'#ffd23f':'#3a4663';
+      lamp.style.boxShadow = on?'0 0 24px #ffd23f':'none';
+      round++;
+      if(guessOn===!!on) score++;
+      document.getElementById('gate-score').textContent='Đoán đúng: '+score+'/'+round+' (cần 3 câu đúng)';
+      if(score>=3 && !stDone[3]){ stDone[3]=true; if(addStar('st4'))flashStar(); NEXT.disabled=false; renderStops();
+        document.getElementById('gate-q').textContent='🎉 Giỏi quá! Con vừa suy nghĩ giống một con chip!';
+        return;
+      }
+      setTimeout(newRound,900);
+    }
+    document.getElementById('g-on').addEventListener('click',()=>answer(true));
+    document.getElementById('g-off').addEventListener('click',()=>answer(false));
+    newRound();
+  }},
+ {title:'🚉 Trạm 5 — Màn hình vẽ chữ bằng các chấm sáng',
+  build(body){
+    body.innerHTML = `
+      <p class="lead">Màn hình là hàng triệu bóng đèn tí hon gọi là <b>pixel</b>. Chip ra lệnh: "pixel này sáng, pixel kia tắt" — và chữ <b>${chosenChar}</b> của con hiện ra!</p>
+      <div id="pixgrid"></div>
+      <div class="btnrow" style="justify-content:center">
+        <button class="btn primary" id="drawpix">✨ Vẽ chữ ${chosenChar}!</button>
+        <button class="btn warm" id="zoomout-btn" hidden>🔭 Lùi ra xa xem!</button>
+      </div>
+      <div id="shrinkbox" hidden>
+        <p class="lead">Lùi ra xa dần… đèn nhỏ quá nên mắt mình không thấy từng ô nữa — chỉ còn thấy chữ <b>${chosenChar}</b> mượt mà! Màn hình tivi và máy tính đều là hàng triệu đèn tí hon như vậy đó.</p>
+        <canvas id="shrinkcanvas" height="320"></canvas>
+        <div class="btnrow" style="justify-content:center">
+          <button class="btn" id="shrink-replay">🔁 Xem lại</button>
+          <button class="btn primary" id="to-color" disabled>🎨 Còn màu sắc thì sao?</button>
+        </div>
+      </div>
+      <div id="colorbox" hidden>
+        <p class="lead">Mỗi pixel thật ra có <b>3 đèn tí hon</b> nằm sát nhau: <b style="color:#ff5c5c">Đỏ</b>, <b style="color:#5ff26e">Xanh lá</b>, <b style="color:#6e9bff">Xanh dương</b>. Chúng nhỏ đến mức mắt mình thấy 3 đèn hòa thành MỘT màu. Kéo thử xem!</p>
+        <div class="crow"><span style="color:#ff5c5c">🔴 Đỏ</span><input type="range" id="cr" min="0" max="255" value="0" style="accent-color:#ff5c5c"></div>
+        <div class="crow"><span style="color:#5ff26e">🟢 Xanh lá</span><input type="range" id="cg" min="0" max="255" value="0" style="accent-color:#5ff26e"></div>
+        <div class="crow"><span style="color:#6e9bff">🔵 Xanh dương</span><input type="range" id="cb" min="0" max="255" value="0" style="accent-color:#6e9bff"></div>
+        <div id="swatchrow">
+          <div style="text-align:center"><div id="subpix"><div></div><div></div><div></div></div><div class="hint">1 pixel phóng to</div></div>
+          <div style="font-size:30px">→</div>
+          <div style="text-align:center"><div id="swatch"></div><div class="hint">mắt mình nhìn thấy</div></div>
+        </div>
+        <p class="lead" id="color-task">🎯 Thử thách: pha ra màu <b style="color:#ffd23f">VÀNG</b>! Mẹo: vàng = đỏ + xanh lá, không cần xanh dương.</p>
+      </div>
+      <div class="reward" id="final-reward">🏆 Tuyệt vời! Con đã đi hết hành trình: Phím → Nhị phân → Dây điện → Chip → Màn hình → Màu sắc!</div>`;
+
+    const grid=document.getElementById('pixgrid');
+    for(let i=0;i<64;i++) grid.appendChild(document.createElement('div'));
+
+    /* hand-made 8×8 pixel font — crisp, child-readable letters */
+    const FONT8={A:[0x18,0x3C,0x66,0x66,0x7E,0x66,0x66,0x00],B:[0x7C,0x66,0x66,0x7C,0x66,0x66,0x7C,0x00],C:[0x3C,0x66,0x60,0x60,0x60,0x66,0x3C,0x00],E:[0x7E,0x60,0x60,0x7C,0x60,0x60,0x7E,0x00],H:[0x66,0x66,0x66,0x7E,0x66,0x66,0x66,0x00],K:[0x66,0x6C,0x78,0x70,0x78,0x6C,0x66,0x00],M:[0x63,0x77,0x7F,0x6B,0x63,0x63,0x63,0x00],N:[0x63,0x73,0x7B,0x6F,0x67,0x63,0x63,0x00]};
+    /* rasterize the letter at N×N: bitmap font for small N, smooth font for big N */
+    function raster(N){
+      const out=new Uint8Array(N*N);
+      const bmp=FONT8[chosenChar]||FONT8.A;
+      if(N<16){
+        for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+          const sy=Math.floor(y*8/N), sx=Math.floor(x*8/N);
+          out[y*N+x]=(bmp[sy]>>(7-sx))&1;
+        }
+      }else{
+        const oc=document.createElement('canvas'); oc.width=oc.height=N;
+        const og=oc.getContext('2d',{willReadFrequently:true});
+        og.fillStyle='#fff'; og.font='800 '+Math.round(N*1.12)+'px "Baloo 2", sans-serif';
+        og.textAlign='center'; og.textBaseline='middle'; og.fillText(chosenChar,N/2,N*0.56);
+        const d=og.getImageData(0,0,N,N).data;
+        for(let i=0;i<N*N;i++) out[i]=d[i*4+3]>100?1:0;
+      }
+      return out;
+    }
+
+    document.getElementById('drawpix').addEventListener('click',()=>{
+      const d=raster(8);
+      const cells=[...grid.children]; cells.forEach(c=>c.classList.remove('lit'));
+      let order=[];
+      for(let i=0;i<64;i++) if(d[i]) order.push(i);
+      order.forEach((idx,n)=>setTimeout(()=>{
+        cells[idx].classList.add('lit');
+        if(n===order.length-1){
+          document.getElementById('zoomout-btn').hidden=false;
+          if(!stDone[4]){ stDone[4]=true; if(addStar('st5'))flashStar(); NEXT.disabled=false; renderStops(); }
+        }
+      }, n*60));
+    });
+
+    /* ---- zoom-out animation: 8×8 LEDs melt into a smooth letter on a TV ---- */
+    const sc=document.getElementById('shrinkcanvas'), sg=sc.getContext('2d');
+    const rcache={};
+    function fitSC(){ const dpr=devicePixelRatio||1, w=sc.clientWidth||600; sc.width=w*dpr; sc.height=320*dpr; sg.setTransform(dpr,0,0,dpr,0,0); }
+    let shrinkRAF=null;
+    function runShrink(){
+      fitSC();
+      if(shrinkRAF) cancelAnimationFrame(shrinkRAF);
+      const w=sc.clientWidth||600, h=320, t0=performance.now(), DUR=5000;
+      function frame(now){
+        const t=Math.min(1,(now-t0)/DUR);
+        const ease=t*t*(3-2*t);
+        const N=Math.max(8,Math.round(8*Math.pow(12,ease)));   // 8 → ~96 pixels
+        const scale=1-0.28*ease;                                // camera steps back
+        const S=Math.min(w-40,240)*  (1+0.35*(1-ease)) * scale; // screen size
+        const cx=w/2, cy=h/2-6;
+        sg.clearRect(0,0,w,h);
+        // TV frame
+        const fw=S*1.25, fh=S*1.02, fx=cx-fw/2, fy=cy-fh/2;
+        sg.fillStyle='#223457'; sg.beginPath();
+        sg.roundRect(fx-10,fy-10,fw+20,fh+20,18); sg.fill();
+        sg.fillStyle='#05070f'; sg.beginPath();
+        sg.roundRect(fx,fy,fw,fh,10); sg.fill();
+        sg.fillStyle='#223457';
+        sg.fillRect(cx-14,fy+fh+10,28,16);
+        sg.fillRect(cx-55,fy+fh+26,110,8);
+        // pixels
+        if(!rcache[N]) rcache[N]=raster(N);
+        const d=rcache[N];
+        const px0=cx-S/2, py0=cy-S/2, cell=S/N, gap=Math.min(cell*0.22, 3*(1-ease)+0.2);
+        sg.fillStyle='#5ff2a0';
+        for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+          if(d[y*N+x]) sg.fillRect(px0+x*cell, py0+y*cell, cell-gap, cell-gap);
+        }
+        // caption
+        sg.fillStyle='#aebfe6'; sg.font='700 17px "Baloo 2"'; sg.textAlign='center';
+        sg.fillText(N+' × '+N+' pixel', cx, h-8);
+        if(t<1) shrinkRAF=requestAnimationFrame(frame);
+        else{ shrinkRAF=null; document.getElementById('to-color').disabled=false; }
+      }
+      shrinkRAF=requestAnimationFrame(frame);
+    }
+    document.getElementById('zoomout-btn').addEventListener('click',()=>{
+      document.getElementById('shrinkbox').hidden=false;
+      runShrink();
+      document.getElementById('shrinkbox').scrollIntoView({behavior:'smooth',block:'center'});
+    });
+    document.getElementById('shrink-replay').addEventListener('click',runShrink);
+
+    /* ---- RGB mixing ---- */
+    document.getElementById('to-color').addEventListener('click',()=>{
+      document.getElementById('colorbox').hidden=false;
+      mix();
+      document.getElementById('colorbox').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    const cr=document.getElementById('cr'), cg2=document.getElementById('cg'), cb=document.getElementById('cb');
+    const subs=document.querySelectorAll('#subpix div');
+    function mix(){
+      const r=+cr.value, g=+cg2.value, b=+cb.value;
+      document.getElementById('swatch').style.background='rgb('+r+','+g+','+b+')';
+      subs[0].style.background='rgb('+r+',0,0)';
+      subs[1].style.background='rgb(0,'+g+',0)';
+      subs[2].style.background='rgb(0,0,'+b+')';
+      if(r>200&&g>180&&b<70){
+        document.getElementById('color-task').innerHTML='🎉 Ra màu <b style="color:rgb('+r+','+g+','+b+')">VÀNG</b> rồi! Chỉ bằng đèn đỏ + đèn xanh lá — màn hình pha mọi màu đúng như vậy!';
+        document.getElementById('final-reward').classList.add('show');
+        if(addStar('st6')) flashStar();
+      }
+    }
+    [cr,cg2,cb].forEach(x=>x.addEventListener('input',mix));
+  }},
+];
+
+function renderStops(){
+  const box=document.getElementById('stations'); box.innerHTML='';
+  for(let i=0;i<5;i++){
+    const d=document.createElement('div'); d.className='stop'+(stDone[i]?' done':i===st?' now':'');
+    box.appendChild(d);
+  }
+}
+function renderStation(){
+  renderStops();
+  document.getElementById('station-title').textContent = STATIONS[st].title;
+  STATIONS[st].build(document.getElementById('station-body'));
+  document.getElementById('st-prev').disabled = st===0;
+  NEXT.disabled = !stDone[st];
+  NEXT.textContent = st===4 ? '🏠 Về nhà' : 'Đi tiếp ➡';
+}
+document.getElementById('st-prev').addEventListener('click',()=>{ if(st>0){st--;renderStation();} });
+NEXT.addEventListener('click',()=>{
+  if(st===4){ show('home'); st=0; return; }
+  st++; renderStation();
+});
+</script>
