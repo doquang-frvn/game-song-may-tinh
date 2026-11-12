@@ -20,6 +20,13 @@ button{font-family:var(--font);cursor:pointer;border:none;border-radius:16px;col
 button:focus-visible{outline:3px solid var(--spark);outline-offset:2px}
 h1,h2,h3{text-wrap:balance;margin:.2em 0}
 .screen{display:none;max-width:860px;margin:0 auto}
+.cols{display:flex;flex-direction:column;min-width:0}
+.col{min-width:0}
+@media(min-width:900px){
+  .screen{max-width:1280px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}
+  .col-sticky{position:sticky;top:8px}
+}
 .screen.active{display:block}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -60,6 +67,7 @@ input[type=range]{width:100%;accent-color:var(--wave);height:36px}
 .quiz .btn.correct{background:var(--ok);color:#043019}
 .quiz .btn.wrong{background:#5c2a3a}
 .picwrap{position:relative;margin:8px 0;border-radius:16px;overflow:hidden}
+#st-img-wrap{max-width:460px;margin-inline:auto}
 .pic{display:block;width:100%;max-width:100%;aspect-ratio:3/2;object-fit:cover}
 canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparent;border-radius:0;pointer-events:none}
 
@@ -81,13 +89,13 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
 /* journey */
 #minikb{display:flex;flex-direction:column;gap:6px;margin:10px 0}
 .kbrow{display:flex;gap:5px;justify-content:center}
-.mk{flex:1 1 0;min-width:0;max-width:54px;padding:9px 0;font-size:19px;font-weight:800;background:#dfe7f5;color:#1b2a52;border-radius:10px;box-shadow:0 4px 0 #5a688c}
+.mk{flex:1 1 0;min-width:0;max-width:50px;padding:6px 0;font-size:17px;font-weight:800;background:#dfe7f5;color:#1b2a52;border-radius:10px;box-shadow:0 4px 0 #5a688c}
 .mk.hit{background:var(--spark);transform:translateY(3px);box-shadow:0 1px 0 #5a688c}
-#livecap{min-height:56px;font-size:18px;font-weight:700;line-height:1.4;margin-top:8px;text-align:center}
+#livecap{min-height:44px;font-size:16px;font-weight:700;line-height:1.4;margin-top:8px;text-align:center}
 #livecap b{color:var(--spark)}
 #nodetabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
 .ntab{background:var(--panel2);padding:8px 2px;font-size:14px;font-weight:700;line-height:1.2;border:2px solid transparent;min-width:0}
-.ntab .ic{font-size:24px;display:block}
+.ntab .ic{font-size:20px;display:block}
 .ntab.active{border-color:var(--wave);background:#24407c}
 .ntab.lit{box-shadow:0 0 14px var(--spark)}
 #station-title{font-size:22px;font-weight:800}
@@ -142,7 +150,8 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
 </div>
 
 <!-- ================= WAVE WORLD ================= -->
-<div class="screen" id="wave">
+<div class="screen" id="wave"><div class="cols">
+  <div class="col col-sticky">
   <div class="card">
     <canvas id="wavecanvas" height="300"></canvas>
     <div id="zoombar">
@@ -153,6 +162,8 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
     <div id="zoomlevelname"></div>
     <div class="picwrap" id="zoomimg-wrap" hidden><img class="pic" id="zoomimg" alt="Hình minh hoạ"><canvas class="fx" id="zoomimg-fx"></canvas></div>
   </div>
+  </div>
+  <div class="col">
   <div class="card" id="wave-controls">
     <div class="slider-label"><span>🎵 Tần số (sóng nhanh/chậm)</span><span id="freq-val"></span></div>
     <input type="range" id="freq" min="1" max="8" step="1" value="3" aria-label="Tần số">
@@ -185,10 +196,12 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
     <div class="quiz" id="wq-answers"></div>
     <div class="reward" id="wq-reward">🎉 Đúng rồi! +1 ⭐</div>
   </div>
-</div>
+  </div>
+</div></div>
 
 <!-- ================= SPECTRUM ================= -->
-<div class="screen" id="spectrum">
+<div class="screen" id="spectrum"><div class="cols">
+  <div class="col">
   <div class="card">
     <canvas id="speccanvas" height="220"></canvas>
     <div class="slider-label" style="margin-top:10px"><span>📻 Sóng DÀI</span><span>💥 Sóng NGẮN</span></div>
@@ -202,6 +215,8 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
     <p class="lead" id="spec-size"></p>
     <p class="lead" id="spec-use"></p>
   </div>
+  </div>
+  <div class="col">
   <div class="card">
     <div class="sec-title">🎯 Xuyên qua được gì?</div>
     <p class="hint">5 tia sóng bắn vào 5 vật. ✅ = xuyên qua · 🔅 = qua được một phần · ⛔ = bị chặn lại</p>
@@ -215,30 +230,36 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
     <p class="lead" id="danger-text"></p>
     <p class="hint">Quy luật: sóng càng <b>ngắn</b> thì càng mang nhiều <b>năng lượng</b> — càng mạnh, càng xuyên sâu, và càng phải cẩn thận.</p>
   </div>
-</div>
+  </div>
+</div></div>
 
 <!-- ================= JOURNEY ================= -->
-<div class="screen" id="journey">
+<div class="screen" id="journey"><div class="cols">
+  <div class="col col-sticky">
   <div class="card">
     <div class="sec-title">⚡ Gõ một chữ — xem nó chạy từ bàn phím ra màn hình!</div>
-    <p class="hint">Bấm chữ trên bàn phím nhỏ, hoặc gõ bàn phím thật. Chạm vào một trạm trên sơ đồ để học kỹ hơn.</p>
+    <p class="hint">Gõ một chữ (bàn phím thật cũng được) — chạm vào trạm để học kỹ hơn.</p>
     <div id="minikb"></div>
-    <canvas id="livecanvas" height="210"></canvas>
+    <canvas id="livecanvas" height="185"></canvas>
     <div id="livecap"></div>
     <div id="nodetabs"></div>
   </div>
+  </div>
+  <div class="col">
   <div class="card" id="stationcard">
     <div id="station-title"></div>
     <div class="picwrap" id="st-img-wrap" hidden><img class="pic" id="st-img" alt="Hình minh hoạ"><canvas class="fx" id="st-img-fx"></canvas></div>
     <div id="station-body"></div>
-    <div class="btnrow"><button class="btn primary" id="st-next" disabled>Sang trạm tiếp ➡</button></div>
+    <p class="hint" id="mode-note"></p>
+    <div class="btnrow"><button class="btn warm" id="mode-toggle">🖐️ Để con tự tay thử</button><button class="btn primary" id="st-next" disabled>Sang trạm tiếp ➡</button></div>
   </div>
-</div>
+  </div>
+</div></div>
 
 <script>
 "use strict";
-const VERSION='2.3', VERSION_DATE='12/11/2026';
-const CHANGES='Sóng trong tranh giờ tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
+const VERSION='2.5', VERSION_DATE='12/11/2026';
+const CHANGES='Màn hình rộng chia 2 cột — sơ đồ bên trái, trạm học bên phải, không phải cuộn · Trạm học tự nhảy theo sơ đồ LIVE, máy tự làm mẫu từng bước (bấm nút để tự tay làm lấy ⭐) · Sóng trong tranh tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
 document.getElementById('verchip').textContent='v'+VERSION;
 document.getElementById('changelog').innerHTML='🆕 <b>Phiên bản '+VERSION+'</b> ('+VERSION_DATE+'): '+CHANGES;
 
@@ -684,7 +705,7 @@ const spaced=s=>s.split('').join(' ');
 let chosenChar='A';
 const NODES=[['⌨️','Phím'],['🔢','Nhị phân'],['⚡','Dây điện'],['🧠','Chip'],['🖥️','Màn hình']];
 const STAGE_T=[0,0.6,1.4,2.4,3.3,4.8];
-const LIVE_H=210;
+const LIVE_H=185;
 const lcv=document.getElementById('livecanvas'), lg=lcv.getContext('2d');
 let liveT0=0, liveRAF=null, liveInited=false, liveEverPressed=false, lastStage=-2;
 function stageOf(e){ if(e<0) return -1; if(e>=STAGE_T[5]) return 5; for(let i=0;i<5;i++) if(e<STAGE_T[i+1]) return i; return 5; }
@@ -745,7 +766,8 @@ window.addEventListener('keydown',ev=>{
 function liveFrame(now){
   const e=(now-liveT0)/1000, stg=stageOf(e);
   drawLive(e);
-  if(stg!==lastStage){ lastStage=stg; document.getElementById('livecap').innerHTML=captionFor(stg,chosenChar); syncTabGlow(stg); }
+  if(stg!==lastStage){ lastStage=stg; document.getElementById('livecap').innerHTML=captionFor(stg,chosenChar); syncTabGlow(stg);
+    if(autoFollow && stg>=0 && stg<=4 && st!==stg){ st=stg; renderStation(); } }
   if(e<STAGE_T[5]+0.3) liveRAF=requestAnimationFrame(liveFrame);
   else{ liveRAF=null; syncTabGlow(-1); addStar('live'); }
 }
@@ -830,7 +852,11 @@ function drawLive(e){
 let st=0, stationOnChar=null;
 const stDone=[false,false,false,false,false];
 const NEXT=document.getElementById('st-next');
-function markDone(i,key){ if(!stDone[i]){ stDone[i]=true; addStar(key); renderTabs(); } if(i===st) NEXT.disabled=false; }
+let autoFollow=true, demoMode=false, demoTimers=[];
+function DT(fn,ms){ demoTimers.push(setTimeout(fn,ms)); }
+function DI(fn,ms){ demoTimers.push(setInterval(fn,ms)); }
+function clearDemo(){ demoTimers.forEach(function(t){ clearTimeout(t); clearInterval(t); }); demoTimers=[]; }
+function markDone(i,key){ if(demoMode) return; if(!stDone[i]){ stDone[i]=true; addStar(key); renderTabs(); } if(i===st) NEXT.disabled=false; }
 
 const STATIONS=[
  {title:'⌨️ Trạm 1 — Phím bấm là một công tắc điện', charDep:false,
@@ -1024,13 +1050,44 @@ const STATIONS=[
   }},
 ];
 function renderStation(){
+  clearDemo(); demoMode=autoFollow;
   renderTabs();
   document.getElementById('station-title').textContent=STATIONS[st].title;
   setImg(document.getElementById('st-img'),'tram'+(st+1));
   stationOnChar=STATIONS[st].build(document.getElementById('station-body'))||null;
-  NEXT.hidden=st===4; NEXT.disabled=!stDone[st];
+  document.getElementById('mode-note').textContent = demoMode
+    ? '🎬 Chế độ tự động: trạm tự nhảy theo sơ đồ và máy tự làm từng bước cho con xem. Muốn tự tay làm để nhận ⭐ thì bấm nút bên dưới!'
+    : '🖐️ Chế độ tự tay: con tự thao tác để nhận ⭐. Gõ chữ mới ở bàn phím phía trên bất cứ lúc nào.';
+  document.getElementById('mode-toggle').textContent = demoMode ? '🖐️ Để con tự tay thử' : '🎬 Xem máy tự làm';
+  NEXT.hidden = demoMode || st===4;
+  NEXT.disabled = !stDone[st];
+  if(demoMode) runDemo();
 }
-function selectStation(i){ if(i===st) { document.getElementById('stationcard').scrollIntoView({behavior:'smooth',block:'start'}); return; } st=i; renderStation(); document.getElementById('stationcard').scrollIntoView({behavior:'smooth',block:'start'}); }
+function runDemo(){
+  const body=document.getElementById('station-body');
+  if(st===0){
+    const key=body.querySelector('#bigkey'); let n=0;
+    DI(function(){ if(!key.isConnected||n++>=5){ clearDemo(); return; }
+      key.dispatchEvent(new Event('pointerdown',{cancelable:true}));
+      DT(function(){ key.dispatchEvent(new Event('pointerup',{cancelable:true})); },260); },650);
+  }else if(st===1){
+    const row=body.querySelector('#bitrow');
+    codeOf(chosenChar).split('').forEach(function(b,i){ if(b==='1') DT(function(){ if(row.children[i]) row.children[i].click(); }, 200+i*110); });
+  }else if(st===2){
+    DT(function(){ const b=body.querySelector('#sendbits'); if(b) b.click(); },450);
+  }else if(st===3){
+    let n=0;
+    DI(function(){
+      const s1=body.querySelector('#sw1'), s2=body.querySelector('#sw2'), g1=body.querySelector('#g-on'), g0=body.querySelector('#g-off');
+      if(!s1||n++>=6){ clearDemo(); return; }
+      const on=s1.classList.contains('on')&&s2.classList.contains('on');
+      (on?g1:g0).click(); },1150);
+  }else if(st===4){
+    DT(function(){ const b=body.querySelector('#drawpix'); if(b) b.click(); },450);
+  }
+}
+function selectStation(i){ autoFollow=false; st=i; renderStation(); document.getElementById('stationcard').scrollIntoView({behavior:'smooth',block:'start'}); }
+document.getElementById('mode-toggle').addEventListener('click',function(){ autoFollow=!autoFollow; renderStation(); });
 NEXT.addEventListener('click',()=>{ if(st<4) selectStation(st+1); });
 </script>
 
