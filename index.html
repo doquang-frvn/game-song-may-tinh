@@ -262,8 +262,8 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
 
 <script>
 "use strict";
-const VERSION='2.6', VERSION_DATE='12/11/2026';
-const CHANGES='Hành Trình Phím Bấm chạy chậm lại, có nút chọn tốc độ 🐢 🚶 🐇 · Màn hình rộng chia 2 cột — sơ đồ bên trái, trạm học bên phải, không phải cuộn · Trạm học tự nhảy theo sơ đồ LIVE, máy tự làm mẫu từng bước (bấm nút để tự tay làm lấy ⭐) · Sóng trong tranh tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
+const VERSION='2.7', VERSION_DATE='12/11/2026';
+const CHANGES='Thế Giới Sóng có hệ quy chiếu nét đứt và chấm đỏ để thấy điểm trên sóng chỉ lên xuống tại chỗ · Hành Trình Phím Bấm chạy chậm lại, có nút chọn tốc độ 🐢 🚶 🐇 · Màn hình rộng chia 2 cột — sơ đồ bên trái, trạm học bên phải, không phải cuộn · Trạm học tự nhảy theo sơ đồ LIVE, máy tự làm mẫu từng bước (bấm nút để tự tay làm lấy ⭐) · Sóng trong tranh tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
 document.getElementById('verchip').textContent='v'+VERSION;
 document.getElementById('changelog').innerHTML='🆕 <b>Phiên bản '+VERSION+'</b> ('+VERSION_DATE+'): '+CHANGES;
 
@@ -461,8 +461,24 @@ function drawWave(){
     ctx.stroke();
     ctx.fillStyle='#aebfe6'; ctx.font='500 15px "Baloo 2"'; ctx.textAlign='left';
     if(zoom===4){
-      ctx.fillStyle='#ffd23f';
-      for(let i=1;i<=9;i++){ const x=w*i/10, y=mid-A*Math.sin(k*x-waveT*f*0.9); ctx.beginPath(); ctx.arc(x,y,7,0,7); ctx.fill(); }
+      /* hệ quy chiếu: đường cân bằng + vạch đứng nét đứt cho từng chấm */
+      ctx.save(); ctx.setLineDash([7,7]); ctx.lineWidth=1.5; ctx.strokeStyle='rgba(174,191,230,.5)';
+      ctx.beginPath(); ctx.moveTo(0,mid); ctx.lineTo(w,mid); ctx.stroke();
+      for(let i=1;i<=9;i++){ if(i===5) continue; const x=w*i/10; ctx.beginPath(); ctx.moveTo(x,mid-A-8); ctx.lineTo(x,mid+A+8); ctx.stroke(); }
+      /* vạch riêng của chấm đỏ */
+      const xr=w*5/10; ctx.strokeStyle='rgba(255,122,89,.9)'; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.moveTo(xr,mid-A-8); ctx.lineTo(xr,mid+A+8); ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle='#ff7a59';
+      ctx.beginPath(); ctx.moveTo(xr,mid-A-20); ctx.lineTo(xr-7,mid-A-9); ctx.lineTo(xr+7,mid-A-9); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(xr,mid+A+20); ctx.lineTo(xr-7,mid+A+9); ctx.lineTo(xr+7,mid+A+9); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#aebfe6'; ctx.font='600 13px "Baloo 2"'; ctx.textAlign='left'; ctx.fillText('vị trí đứng yên',6,mid-6);
+      /* các chấm */
+      for(let i=1;i<=9;i++){
+        const x=w*i/10, y=mid-A*Math.sin(k*x-waveT*f*0.9);
+        if(i===5){ ctx.save(); ctx.shadowColor='#ff7a59'; ctx.shadowBlur=14; ctx.fillStyle='#ff7a59'; ctx.beginPath(); ctx.arc(x,y,11,0,7); ctx.fill(); ctx.restore(); }
+        else{ ctx.fillStyle='#ffd23f'; ctx.beginPath(); ctx.arc(x,y,7,0,7); ctx.fill(); }
+      }
       const lambda=2*Math.PI/k, x0=((Math.PI/2+waveT*f*0.9)/k)%lambda;
       if(x0+lambda<w-10){
         const yB=mid-A-22;
@@ -473,7 +489,7 @@ function drawWave(){
         ctx.fillText('bước sóng λ',x0+lambda/2,yB-14);
       }
       ctx.fillStyle='#aebfe6'; ctx.font='500 15px "Baloo 2"'; ctx.textAlign='left';
-      ctx.fillText('Chấm vàng chỉ nhún lên xuống — còn hình sóng thì chạy tới!',12,h-14);
+      ctx.fillText('🔴 Chấm đỏ chỉ chạy lên xuống tại chỗ,',12,h-34); ctx.fillText('còn đỉnh sóng (vạch xanh λ) thì chạy tới →',12,h-14);
     }else ctx.fillText('Nhiều con sóng nối đuôi nhau chạy về phía trước →',12,h-14);
   }else{
     const scenes=[{e:'🌍',r:7,l:'Sóng bay quanh Trái Đất'},{e:'🗼',r:6,l:'Cột sóng phát đi khắp thành phố'},{e:'📶',r:5,l:'Wifi, loa, điều khiển TV trong nhà'}];
