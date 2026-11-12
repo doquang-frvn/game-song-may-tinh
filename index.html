@@ -91,6 +91,9 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
 .kbrow{display:flex;gap:5px;justify-content:center}
 .mk{flex:1 1 0;min-width:0;max-width:50px;padding:6px 0;font-size:17px;font-weight:800;background:#dfe7f5;color:#1b2a52;border-radius:10px;box-shadow:0 4px 0 #5a688c}
 .mk.hit{background:var(--spark);transform:translateY(3px);box-shadow:0 1px 0 #5a688c}
+.speedrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+.spd{background:var(--panel2);padding:6px 12px;font-size:15px;font-weight:700;border:2px solid transparent}
+.spd.on{border-color:var(--spark);color:var(--spark)}
 #livecap{min-height:44px;font-size:16px;font-weight:700;line-height:1.4;margin-top:8px;text-align:center}
 #livecap b{color:var(--spark)}
 #nodetabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
@@ -240,6 +243,7 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
     <div class="sec-title">⚡ Gõ một chữ — xem nó chạy từ bàn phím ra màn hình!</div>
     <p class="hint">Gõ một chữ (bàn phím thật cũng được) — chạm vào trạm để học kỹ hơn.</p>
     <div id="minikb"></div>
+    <div class="speedrow"><span class="hint">Tốc độ:</span><button class="spd on" data-k="1">🐢 Chậm</button><button class="spd" data-k="0.55">🚶 Vừa</button><button class="spd" data-k="0.22">🐇 Nhanh</button></div>
     <canvas id="livecanvas" height="185"></canvas>
     <div id="livecap"></div>
     <div id="nodetabs"></div>
@@ -258,8 +262,8 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
 
 <script>
 "use strict";
-const VERSION='2.5', VERSION_DATE='12/11/2026';
-const CHANGES='Màn hình rộng chia 2 cột — sơ đồ bên trái, trạm học bên phải, không phải cuộn · Trạm học tự nhảy theo sơ đồ LIVE, máy tự làm mẫu từng bước (bấm nút để tự tay làm lấy ⭐) · Sóng trong tranh tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
+const VERSION='2.6', VERSION_DATE='12/11/2026';
+const CHANGES='Hành Trình Phím Bấm chạy chậm lại, có nút chọn tốc độ 🐢 🚶 🐇 · Màn hình rộng chia 2 cột — sơ đồ bên trái, trạm học bên phải, không phải cuộn · Trạm học tự nhảy theo sơ đồ LIVE, máy tự làm mẫu từng bước (bấm nút để tự tay làm lấy ⭐) · Sóng trong tranh tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
 document.getElementById('verchip').textContent='v'+VERSION;
 document.getElementById('changelog').innerHTML='🆕 <b>Phiên bản '+VERSION+'</b> ('+VERSION_DATE+'): '+CHANGES;
 
@@ -706,6 +710,10 @@ let chosenChar='A';
 const NODES=[['⌨️','Phím'],['🔢','Nhị phân'],['⚡','Dây điện'],['🧠','Chip'],['🖥️','Màn hình']];
 const STAGE_T=[0,0.6,1.4,2.4,3.3,4.8];
 const LIVE_H=185;
+const STAGE_REAL=[4,5,5,5,6];   /* giây thật cho từng bước ở tốc độ Chậm */
+let speedK=1;
+function realToBase(r){ let acc=0; for(let i=0;i<5;i++){ const d=STAGE_REAL[i]*speedK; if(r<acc+d) return STAGE_T[i]+(r-acc)/d*(STAGE_T[i+1]-STAGE_T[i]); acc+=d; } return STAGE_T[5]+(r-acc); }
+document.querySelectorAll(".spd").forEach(function(b){ b.addEventListener("click",function(){ speedK=+b.dataset.k; document.querySelectorAll(".spd").forEach(function(x){ x.classList.toggle("on",x===b); }); }); });
 const lcv=document.getElementById('livecanvas'), lg=lcv.getContext('2d');
 let liveT0=0, liveRAF=null, liveInited=false, liveEverPressed=false, lastStage=-2;
 function stageOf(e){ if(e<0) return -1; if(e>=STAGE_T[5]) return 5; for(let i=0;i<5;i++) if(e<STAGE_T[i+1]) return i; return 5; }
@@ -718,7 +726,14 @@ function captionFor(stg,c){
     '🧠 Con chip đọc mật mã, hiểu "à, đây là chữ <b>'+c+'</b>", rồi ra lệnh cho màn hình',
     '🖥️ Màn hình bật đúng những đèn pixel cần thiết…',
     '✅ Chữ <b>'+c+'</b> đã hiện ra! Máy thật làm việc này nhanh hơn một cái chớp mắt.'
-  ][stg] || '👆 Bấm một chữ để bắt đầu!';
+  ][stg] ? ((stg<5?'<span style="color:var(--ink-dim)">Bước '+(stg+1)+'/5 · </span>':'')+[
+    '⌨️ Con bấm phím <b>'+c+'</b> → công tắc dưới phím đóng lại, điện chạy!',
+    '🔢 Chữ <b>'+c+'</b> biến thành mật mã 8 số: <b>'+code+'</b>',
+    '⚡ 8 số chạy trên dây bằng xung điện: điện cao = <b>1</b>, điện thấp = <b>0</b>',
+    '🧠 Con chip đọc mật mã, hiểu "à, đây là chữ <b>'+c+'</b>", rồi ra lệnh cho màn hình',
+    '🖥️ Màn hình bật đúng những đèn pixel cần thiết…',
+    '✅ Chữ <b>'+c+'</b> đã hiện ra! Máy thật làm việc này nhanh hơn một cái chớp mắt.'
+  ][stg]) : '👆 Bấm một chữ để bắt đầu!';
 }
 
 function buildMiniKb(){
@@ -764,7 +779,7 @@ window.addEventListener('keydown',ev=>{
   if(/^[a-zA-Z]$/.test(ev.key)){ ev.preventDefault(); pressLetter(ev.key.toUpperCase()); }
 });
 function liveFrame(now){
-  const e=(now-liveT0)/1000, stg=stageOf(e);
+  const e=realToBase((now-liveT0)/1000), stg=stageOf(e);
   drawLive(e);
   if(stg!==lastStage){ lastStage=stg; document.getElementById('livecap').innerHTML=captionFor(stg,chosenChar); syncTabGlow(stg);
     if(autoFollow && stg>=0 && stg<=4 && st!==stg){ st=stg; renderStation(); } }
@@ -853,8 +868,8 @@ let st=0, stationOnChar=null;
 const stDone=[false,false,false,false,false];
 const NEXT=document.getElementById('st-next');
 let autoFollow=true, demoMode=false, demoTimers=[];
-function DT(fn,ms){ demoTimers.push(setTimeout(fn,ms)); }
-function DI(fn,ms){ demoTimers.push(setInterval(fn,ms)); }
+function DT(fn,ms){ demoTimers.push(setTimeout(fn,ms*speedK)); }
+function DI(fn,ms){ demoTimers.push(setInterval(fn,ms*speedK)); }
 function clearDemo(){ demoTimers.forEach(function(t){ clearTimeout(t); clearInterval(t); }); demoTimers=[]; }
 function markDone(i,key){ if(demoMode) return; if(!stDone[i]){ stDone[i]=true; addStar(key); renderTabs(); } if(i===st) NEXT.disabled=false; }
 
@@ -944,6 +959,7 @@ const STATIONS=[
     let s1=0,s2=0,score=0,round=0,lock=false;
     const sw1=document.getElementById('sw1'),sw2=document.getElementById('sw2'),lamp=document.getElementById('lamp2');
     function newRound(){
+      if(!sw1.isConnected) return;
       s1=Math.random()<.5?0:1; s2=Math.random()<.5?0:1; lock=false;
       sw1.textContent=s1; sw1.classList.toggle('on',!!s1); sw2.textContent=s2; sw2.classList.toggle('on',!!s2);
       lamp.style.background='#3a4663'; lamp.style.boxShadow='none';
@@ -1007,7 +1023,7 @@ const STATIONS=[
     document.getElementById('drawpix').addEventListener('click',()=>{
       const cells=[...grid.children]; cells.forEach(c=>c.classList.remove('lit'));
       const order=[]; for(let y=0;y<8;y++)for(let x=0;x<8;x++) if(px8(C,x,y)) order.push(y*8+x);
-      order.forEach((idx,n)=>setTimeout(()=>{ cells[idx].classList.add('lit'); if(n===order.length-1){ document.getElementById('zoomout-btn').hidden=false; markDone(4,'st5'); } },n*60));
+      order.forEach((idx,n)=>setTimeout(()=>{ if(!grid.isConnected) return; cells[idx].classList.add('lit'); if(n===order.length-1){ document.getElementById('zoomout-btn').hidden=false; markDone(4,'st5'); } },n*60));
     });
     const sc=document.getElementById('shrinkcanvas'), sg=sc.getContext('2d'), rcache={};
     let shrinkRAF=null;
@@ -1072,7 +1088,7 @@ function runDemo(){
       DT(function(){ key.dispatchEvent(new Event('pointerup',{cancelable:true})); },260); },650);
   }else if(st===1){
     const row=body.querySelector('#bitrow');
-    codeOf(chosenChar).split('').forEach(function(b,i){ if(b==='1') DT(function(){ if(row.children[i]) row.children[i].click(); }, 200+i*110); });
+    codeOf(chosenChar).split('').forEach(function(b,i){ if(b==='1') DT(function(){ if(row.children[i]) row.children[i].click(); }, 500+i*480); });
   }else if(st===2){
     DT(function(){ const b=body.querySelector('#sendbits'); if(b) b.click(); },450);
   }else if(st===3){
@@ -1081,7 +1097,7 @@ function runDemo(){
       const s1=body.querySelector('#sw1'), s2=body.querySelector('#sw2'), g1=body.querySelector('#g-on'), g0=body.querySelector('#g-off');
       if(!s1||n++>=6){ clearDemo(); return; }
       const on=s1.classList.contains('on')&&s2.classList.contains('on');
-      (on?g1:g0).click(); },1150);
+      (on?g1:g0).click(); },1500);
   }else if(st===4){
     DT(function(){ const b=body.querySelector('#drawpix'); if(b) b.click(); },450);
   }
