@@ -25,7 +25,7 @@ h1,h2,h3{text-wrap:balance;margin:.2em 0}
 @media(min-width:900px){
   .screen{max-width:1280px}
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}
-  .col-sticky{position:sticky;top:8px}
+  .col-sticky{position:sticky;top:8px;max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain}
 }
 .screen.active{display:block}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -129,6 +129,19 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
 .crow{display:flex;align-items:center;gap:10px;margin:6px 0}
 .crow span{width:110px;font-weight:800;flex:none}
 .crow input{flex:1;min-width:0}
+@media (min-width:900px) and (max-height:720px){
+  .card{padding:10px 12px;margin:6px 0}
+  #journey .col-sticky .hint{display:none}
+  .mk{padding:3px 0;font-size:15px;box-shadow:0 3px 0 #5a688c}
+  #minikb{gap:4px;margin:6px 0}
+  .speedrow{margin:2px 0 4px}
+  .spd{padding:3px 10px;font-size:14px}
+  #livecap{min-height:38px;font-size:15px;margin-top:4px}
+  #nodetabs{margin-top:4px}
+  .ntab{padding:4px 2px;font-size:13px}
+  .ntab .ic{display:inline;font-size:15px;margin-right:2px}
+  #zoombar .zbtn{width:46px;height:46px;font-size:24px}
+}
 @media (max-width:480px){ .bit{width:38px;height:54px;font-size:22px} .ntab{font-size:12px} #verchip{display:none} }
 </style>
 
@@ -163,10 +176,10 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
       <button class="zbtn" id="zoom-in" aria-label="Phóng to">➕</button>
     </div>
     <div id="zoomlevelname"></div>
-    <div class="picwrap" id="zoomimg-wrap" hidden><img class="pic" id="zoomimg" alt="Hình minh hoạ"><canvas class="fx" id="zoomimg-fx"></canvas></div>
   </div>
   </div>
   <div class="col">
+  <div class="picwrap" id="zoomimg-wrap" hidden><img class="pic" id="zoomimg" alt="Hình minh hoạ"><canvas class="fx" id="zoomimg-fx"></canvas></div>
   <div class="card" id="wave-controls">
     <div class="slider-label"><span>🎵 Tần số (sóng nhanh/chậm)</span><span id="freq-val"></span></div>
     <input type="range" id="freq" min="1" max="8" step="1" value="3" aria-label="Tần số">
@@ -262,8 +275,8 @@ canvas.fx{position:absolute;inset:0;width:100%;height:100%;background:transparen
 
 <script>
 "use strict";
-const VERSION='2.8', VERSION_DATE='12/11/2026';
-const CHANGES='Thêm ảnh động cho dải sóng radio — đủ ảnh cả 7 dải · Thế Giới Sóng có hệ quy chiếu nét đứt và chấm đỏ để thấy điểm trên sóng chỉ lên xuống tại chỗ · Hành Trình Phím Bấm chạy chậm lại, có nút chọn tốc độ 🐢 🚶 🐇 · Màn hình rộng chia 2 cột — sơ đồ bên trái, trạm học bên phải, không phải cuộn · Trạm học tự nhảy theo sơ đồ LIVE, máy tự làm mẫu từng bước (bấm nút để tự tay làm lấy ⭐) · Sóng trong tranh tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
+const VERSION='2.9', VERSION_DATE='12/11/2026';
+const CHANGES='Sửa lỗi máy tính bảng cầm ngang bị cắt mất phần dưới · Thêm ảnh động cho dải sóng radio — đủ ảnh cả 7 dải · Thế Giới Sóng có hệ quy chiếu nét đứt và chấm đỏ để thấy điểm trên sóng chỉ lên xuống tại chỗ · Hành Trình Phím Bấm chạy chậm lại, có nút chọn tốc độ 🐢 🚶 🐇 · Màn hình rộng chia 2 cột — sơ đồ bên trái, trạm học bên phải, không phải cuộn · Trạm học tự nhảy theo sơ đồ LIVE, máy tự làm mẫu từng bước (bấm nút để tự tay làm lấy ⭐) · Sóng trong tranh tự uốn lượn, mặt biển dập dềnh, giọt nước nhún nhảy · 17 ảnh minh hoạ có hiệu ứng (đốm sáng chạy, đèn nhấp nháy, sao lấp lánh) · Sơ đồ LIVE gộp 5 trạm · gõ đủ 26 chữ · Dải Sóng có cảnh "xuyên qua được gì" và thước đo nguy hiểm.';
 document.getElementById('verchip').textContent='v'+VERSION;
 document.getElementById('changelog').innerHTML='🆕 <b>Phiên bản '+VERSION+'</b> ('+VERSION_DATE+'): '+CHANGES;
 
@@ -580,7 +593,7 @@ function applyZoom(){
 zslider.addEventListener('input',applyZoom);
 document.getElementById('zoom-in').addEventListener('click',()=>{zslider.value=Math.min(5,+zslider.value+1);applyZoom();});
 document.getElementById('zoom-out').addEventListener('click',()=>{zslider.value=Math.max(0,+zslider.value-1);applyZoom();});
-window.addEventListener('resize',()=>{ if(waveRAF) fitCanvas(canvas,ctx,300); if(specRAF){fitCanvas(scv,sgx,220);fitCanvas(pcv,pgx,290);} if(liveInited) fitCanvas(lcv,lg,LIVE_H); });
+window.addEventListener('resize',()=>{ if(waveRAF) fitCanvas(canvas,ctx,300); if(specRAF){fitCanvas(scv,sgx,220);fitCanvas(pcv,pgx,290);} if(liveInited) fitCanvas(lcv,lg,liveH()); });
 
 const WQ=[
   {q:'Kéo tần số LÊN CAO thì bước sóng sẽ…',a:['Ngắn lại ✂️','Dài ra 📏','Không đổi'],c:0},
@@ -730,7 +743,8 @@ const spaced=s=>s.split('').join(' ');
 let chosenChar='A';
 const NODES=[['⌨️','Phím'],['🔢','Nhị phân'],['⚡','Dây điện'],['🧠','Chip'],['🖥️','Màn hình']];
 const STAGE_T=[0,0.6,1.4,2.4,3.3,4.8];
-const LIVE_H=185;
+let LIVE_H=185;
+function liveH(){ LIVE_H = window.innerHeight<720 ? 150 : 185; return LIVE_H; }
 const STAGE_REAL=[4,5,5,5,6];   /* giây thật cho từng bước ở tốc độ Chậm */
 let speedK=1;
 function realToBase(r){ let acc=0; for(let i=0;i<5;i++){ const d=STAGE_REAL[i]*speedK; if(r<acc+d) return STAGE_T[i]+(r-acc)/d*(STAGE_T[i+1]-STAGE_T[i]); acc+=d; } return STAGE_T[5]+(r-acc); }
@@ -782,7 +796,7 @@ function initJourney(){
     liveInited=true; buildMiniKb();
     lcv.addEventListener('click',ev=>{ const r=lcv.getBoundingClientRect(); selectStation(Math.min(4,Math.max(0,Math.floor((ev.clientX-r.left)/(r.width/5))))); });
   }
-  fitCanvas(lcv,lg,LIVE_H); drawLive(liveEverPressed?99:-1);
+  fitCanvas(lcv,lg,liveH()); drawLive(liveEverPressed?99:-1);
   document.getElementById('livecap').innerHTML=captionFor(liveEverPressed?5:-1,chosenChar);
   renderStation();
 }
@@ -810,7 +824,7 @@ function liveFrame(now){
 function drawLive(e){
   const w=lcv.clientWidth||600, h=LIVE_H; lg.clearRect(0,0,w,h);
   const stg=stageOf(e), c=chosenChar, bits=codeOf(c).split('').map(Number);
-  const col=w/5, s=Math.min(96,col-12), cy=h/2-4, cx=i=>col*(i+0.5);
+  const col=w/5, s=Math.min(96,col-12,h-72), cy=h/2-4, cx=i=>col*(i+0.5);
   const done=i=>stg===5||stg>i;
   /* dây nối + dòng điện sáng dần */
   lg.strokeStyle='#3a4f85'; lg.lineWidth=5; lg.beginPath(); lg.moveTo(cx(0),cy); lg.lineTo(cx(4),cy); lg.stroke();
